@@ -18,7 +18,7 @@ func InitCartRepository() *CartRepository {
 	}
 }
 
-func (r *CartRepository) GetCart(userId int) (models.Cart, error) {
+func (r *CartRepository) GetCart(userId int64) (models.Cart, error) {
 	id := models.UserId(userId)
 	cart, ok := r.carts[id]
 	if !ok {
@@ -28,7 +28,7 @@ func (r *CartRepository) GetCart(userId int) (models.Cart, error) {
 	return cart, nil
 }
 
-func (r *CartRepository) UpdateCart(userId int, intSku int, name string, count int, price int) error {
+func (r *CartRepository) UpdateCart(userId int64, intSku int64, name string, count uint32, price uint32) error {
 	cart, err := r.GetCart(userId)
 	if err != nil {
 		cart = make(models.Cart)
@@ -36,12 +36,16 @@ func (r *CartRepository) UpdateCart(userId int, intSku int, name string, count i
 	}
 
 	sku := models.Sku(intSku)
-	cart[sku] = &models.Product{
-		Sku:   sku,
-		Name:  name,
-		Count: count,
-		Price: price,
+	product, ok := cart[sku]
+	if !ok {
+		cart[sku] = &models.Product{
+			Sku:   sku,
+			Name:  name,
+			Count: 0,
+			Price: price,
+		}
 	}
+	product.Count += count
 
 	return nil
 }

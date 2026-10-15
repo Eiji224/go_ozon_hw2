@@ -27,13 +27,13 @@ func (c *ProductClient) Close() error {
 	return c.conn.Close()
 }
 
-func (c *ProductClient) GetProduct(ctx context.Context, sku int) (name string, price int, err error) {
+func (c *ProductClient) GetProduct(ctx context.Context, sku int64) (name string, price uint32, err error) {
 	req := &pb.GetProductRequest{Sku: int64(sku)}
 
 	resp, err := c.client.GetProduct(ctx, req)
 	if err != nil {
-		return "", -1, err
+		return "", 0, err
 	}
 
-	return resp.Name, int(resp.Price), nil
+	return resp.Name, resp.Price, nil
 }

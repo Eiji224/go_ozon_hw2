@@ -35,7 +35,7 @@ func (s *ProductServer) GetProduct(ctx context.Context, req *pb.GetProductReques
 	response := &pb.GetProductResponse{
 		Sku:   req.Sku,
 		Name:  product.Name,
-		Price: int64(product.Price),
+		Price: product.Price,
 	}
 
 	return response, nil

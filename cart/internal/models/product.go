@@ -1,10 +1,10 @@
 package models
 
-type Sku int
+type Sku int64
 
 type Product struct {
 	Sku   Sku    `json:"sku"`
 	Name  string `json:"name"`
-	Count int    `json:"count"`
-	Price int    `json:"price"`
+	Count uint32 `json:"count"`
+	Price uint32 `json:"price"`
 }

@@ -14,12 +14,12 @@ import (
 )
 
 type CartRepo interface {
-	GetCart(userId int) (models.Cart, error)
-	UpdateCart(userId int, intSku int, name string, count int, price int) error
+	GetCart(userId int64) (models.Cart, error)
+	UpdateCart(userId int64, intSku int64, name string, count uint32, price uint32) error
 }
 
 type ProductClient interface {
-	GetProduct(ctx context.Context, sku int) (name string, price int, err error)
+	GetProduct(ctx context.Context, sku int64) (name string, price uint32, err error)
 }
 
 type Router struct {
@@ -46,7 +46,7 @@ func (router *Router) Serve() {
 }
 
 func (router *Router) getCartContent(w http.ResponseWriter, r *http.Request) {
-	userId, err := strconv.Atoi(r.PathValue("user_id"))
+	userId, err := strconv.ParseInt(r.PathValue("user_id"), 10, 64)
 	if err != nil || userId <= 0 {
 		http.Error(w, `{"error": "user_id must be digit and greater than 0"}`, http.StatusBadRequest)
 		return
@@ -58,7 +58,7 @@ func (router *Router) getCartContent(w http.ResponseWriter, r *http.Request) {
 	}
 	items := cart.GetCartSlice()
 
-	var totalPrice int
+	var totalPrice uint32
 	for _, item := range items {
 		totalPrice += item.Price * item.Count
 	}
@@ -74,25 +74,25 @@ func (router *Router) getCartContent(w http.ResponseWriter, r *http.Request) {
 
 func (router *Router) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	var product models.Product
-	userId, err := strconv.Atoi(r.PathValue("user_id"))
+	userId, err := strconv.ParseInt(r.PathValue("user_id"), 10, 64)
 	if err != nil || userId < 0 {
 		http.Error(w, `{"error": "user_id must be digit and greater than 0"}`, http.StatusBadRequest)
 		return
 	}
-	skuId, err := strconv.Atoi(r.PathValue("sku_id"))
+	skuId, err := strconv.ParseInt(r.PathValue("sku_id"), 10, 64)
 	if err != nil || skuId <= 0 {
 		http.Error(w, `{"error": "sku_id must be digit and greater than 0"}`, http.StatusBadRequest)
 		return
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&product); err != nil || product.Count < 0 {
+	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
 		http.Error(w, `{"error": "count must be digit and greater than 0"}`, http.StatusBadRequest)
 		return
 	}
 
 	name, price, err := router.productClient.GetProduct(context.Background(), skuId)
 	status, errParsed := status.FromError(err)
-	if errParsed {
+	if err != nil && errParsed {
 		switch status.Code() {
 		case codes.InvalidArgument:
 			http.Error(w, `{"error": "`+status.Message()+`"}`, http.StatusBadRequest)
