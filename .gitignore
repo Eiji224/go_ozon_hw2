@@ -4,9 +4,6 @@
 *.so
 *.dylib
 
-go.work
-go.work.sum
-
 .idea/
 .vscode/
 *.suo
