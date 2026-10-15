@@ -3,7 +3,6 @@ package router
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -48,8 +47,8 @@ func (router *Router) Serve() {
 
 func (router *Router) getCartContent(w http.ResponseWriter, r *http.Request) {
 	userId, err := strconv.Atoi(r.PathValue("user_id"))
-	if err != nil {
-		http.Error(w, `{"error": "invalid response"}`, http.StatusBadRequest)
+	if err != nil || userId <= 0 {
+		http.Error(w, `{"error": "user_id must be digit and greater than 0"}`, http.StatusBadRequest)
 		return
 	}
 	cart, err := router.cartRepo.GetCart(userId)
@@ -76,18 +75,18 @@ func (router *Router) getCartContent(w http.ResponseWriter, r *http.Request) {
 func (router *Router) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	var product models.Product
 	userId, err := strconv.Atoi(r.PathValue("user_id"))
-	if err != nil {
-		http.Error(w, `{"error": "invalid response"}`, http.StatusBadRequest)
+	if err != nil || userId < 0 {
+		http.Error(w, `{"error": "user_id must be digit and greater than 0"}`, http.StatusBadRequest)
 		return
 	}
 	skuId, err := strconv.Atoi(r.PathValue("sku_id"))
-	if err != nil {
-		http.Error(w, `{"error": "invalid response"}`, http.StatusBadRequest)
+	if err != nil || skuId <= 0 {
+		http.Error(w, `{"error": "sku_id must be digit and greater than 0"}`, http.StatusBadRequest)
 		return
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		http.Error(w, `{"error": "invalid response"}`, http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&product); err != nil || product.Count < 0 {
+		http.Error(w, `{"error": "count must be digit and greater than 0"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -103,13 +102,11 @@ func (router *Router) addProductToCart(w http.ResponseWriter, r *http.Request) {
 			return
 		default:
 			http.Error(w, `{"error": "internal server error"}`, http.StatusInternalServerError)
-			fmt.Printf("internal server error: %v", err)
 			return
 		}
 	}
 
 	if err := router.cartRepo.UpdateCart(userId, skuId, name, product.Count, price); err != nil {
-		fmt.Printf("internal server error: %v", err)
 		http.Error(w, `{"error": "internal server error"}`, http.StatusInternalServerError)
 		return
 	}
