@@ -13,7 +13,7 @@ type ProductRepository struct {
 }
 
 func InitProductRepository() (*ProductRepository, error) {
-	file, err := os.Open("../../products.json")
+	file, err := os.Open("products.json")
 	if err != nil {
 		return nil, errors.New("failed to open products.json")
 	}

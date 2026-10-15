@@ -5,6 +5,7 @@ version:
 
 .PHONY: run-all
 run-all:
+	cd product_service && go run ./cmd/product_service/main.go
 	cd cart && go run ./cmd/api/main.go
 
 .PHONY: generate

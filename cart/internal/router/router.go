@@ -1,13 +1,17 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/Eiji224/go_ozon/hw2/cart/internal/dto"
 	"github.com/Eiji224/go_ozon/hw2/cart/internal/models"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type CartRepo interface {
@@ -15,15 +19,21 @@ type CartRepo interface {
 	UpdateCart(userId int, intSku int, name string, count int, price int) error
 }
 
-type Router struct {
-	r        *http.ServeMux
-	cartRepo CartRepo
+type ProductClient interface {
+	GetProduct(ctx context.Context, sku int) (name string, price int, err error)
 }
 
-func InitRouter(cartRepo CartRepo) *Router {
+type Router struct {
+	r             *http.ServeMux
+	cartRepo      CartRepo
+	productClient ProductClient
+}
+
+func InitRouter(cartRepo CartRepo, productClient ProductClient) *Router {
 	router := &Router{
-		r:        http.NewServeMux(),
-		cartRepo: cartRepo,
+		r:             http.NewServeMux(),
+		cartRepo:      cartRepo,
+		productClient: productClient,
 	}
 
 	router.r.HandleFunc("GET /user/{user_id}/cart", router.getCartContent)
@@ -81,7 +91,25 @@ func (router *Router) addProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := router.cartRepo.UpdateCart(userId, skuId, "testName", product.Count, 123); err != nil {
+	name, price, err := router.productClient.GetProduct(context.Background(), skuId)
+	status, errParsed := status.FromError(err)
+	if errParsed {
+		switch status.Code() {
+		case codes.InvalidArgument:
+			http.Error(w, `{"error": "`+status.Message()+`"}`, http.StatusBadRequest)
+			return
+		case codes.NotFound:
+			http.Error(w, `{"error": "`+status.Message()+`"}`, http.StatusNotFound)
+			return
+		default:
+			http.Error(w, `{"error": "internal server error"}`, http.StatusInternalServerError)
+			fmt.Printf("internal server error: %v", err)
+			return
+		}
+	}
+
+	if err := router.cartRepo.UpdateCart(userId, skuId, name, product.Count, price); err != nil {
+		fmt.Printf("internal server error: %v", err)
 		http.Error(w, `{"error": "internal server error"}`, http.StatusInternalServerError)
 		return
 	}

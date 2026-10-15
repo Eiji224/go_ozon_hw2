@@ -3,8 +3,8 @@ package models
 type Sku int
 
 type Product struct {
-	Sku   Sku
-	Name  string
-	Count int `json:"count"`
-	Price int
+	Sku   Sku    `json:"sku"`
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+	Price int    `json:"price"`
 }
