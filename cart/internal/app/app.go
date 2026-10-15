@@ -1,20 +1,19 @@
 package app
 
 import (
-	"log"
-	"net/http"
+	"github.com/Eiji224/go_ozon/hw2/cart/internal/router"
 )
 
 type App struct {
-	router *http.ServeMux
+	router *router.Router
 }
 
-func InitApp(router *http.ServeMux) *App {
+func InitApp(router *router.Router) *App {
 	return &App{
 		router: router,
 	}
 }
 
-func (a *App) StartServer() {
-	log.Fatal(http.ListenAndServe(":8080", a.router))
+func (app *App) StartServer() {
+	app.router.Serve()
 }
