@@ -1,8 +1,6 @@
 syntax = "proto3";
 package product_service;
-option go_package = "github.com/Eiji224/go_ozon/hw2/product-service/pkg/api;product-service";
-
-import "google/api/annotations.proto";
+option go_package = "github.com/Eiji224/go_ozon/hw2/product_service/pkg/api;product_service";
 
 service ProductService {
     rpc GetProduct(GetProductRequest) returns (GetProductResponse);
