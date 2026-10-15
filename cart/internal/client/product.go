@@ -15,7 +15,7 @@ type ProductClient struct {
 }
 
 func InitProductClient(addr string) (*ProductClient, error) {
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, errors.New("failed to start product gRPC client")
 	}
@@ -35,5 +35,5 @@ func (c *ProductClient) GetProduct(ctx context.Context, sku int64) (name string,
 		return "", 0, err
 	}
 
-	return resp.Name, resp.Price, nil
+	return resp.Name, uint32(resp.Price), nil
 }

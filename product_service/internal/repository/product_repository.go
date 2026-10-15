@@ -31,7 +31,7 @@ func InitProductRepository() (*ProductRepository, error) {
 func (r *ProductRepository) GetProduct(sku models.Sku) (*models.Product, error) {
 	product, ok := r.products[sku]
 	if !ok {
-		return nil, errors.New("Not found")
+		return nil, errors.New("not found")
 	}
 
 	return product, nil

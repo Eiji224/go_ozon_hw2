@@ -13,5 +13,5 @@ message GetProductRequest {
 message GetProductResponse {
     int64 sku = 1;
     string name = 2;
-    uint32 price = 3;
+    int32 price = 3;
 }

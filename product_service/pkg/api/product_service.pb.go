@@ -69,7 +69,7 @@ type GetProductResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Sku           int64                  `protobuf:"varint,1,opt,name=sku,proto3" json:"sku,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Price         uint32                 `protobuf:"varint,3,opt,name=price,proto3" json:"price,omitempty"`
+	Price         int32                  `protobuf:"varint,3,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -118,7 +118,7 @@ func (x *GetProductResponse) GetName() string {
 	return ""
 }
 
-func (x *GetProductResponse) GetPrice() uint32 {
+func (x *GetProductResponse) GetPrice() int32 {
 	if x != nil {
 		return x.Price
 	}
@@ -135,7 +135,7 @@ const file_api_product_service_proto_rawDesc = "" +
 	"\x12GetProductResponse\x12\x10\n" +
 	"\x03sku\x18\x01 \x01(\x03R\x03sku\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
-	"\x05price\x18\x03 \x01(\rR\x05price2g\n" +
+	"\x05price\x18\x03 \x01(\x05R\x05price2g\n" +
 	"\x0eProductService\x12U\n" +
 	"\n" +
 	"GetProduct\x12\".product_service.GetProductRequest\x1a#.product_service.GetProductResponseBHZFgithub.com/Eiji224/go_ozon/hw2/product_service/pkg/api;product_serviceb\x06proto3"

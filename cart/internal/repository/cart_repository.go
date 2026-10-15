@@ -22,7 +22,7 @@ func (r *CartRepository) GetCart(userId int64) (models.Cart, error) {
 	id := models.UserId(userId)
 	cart, ok := r.carts[id]
 	if !ok {
-		return nil, errors.New("Not found")
+		return nil, errors.New("not found")
 	}
 
 	return cart, nil
@@ -38,12 +38,13 @@ func (r *CartRepository) UpdateCart(userId int64, intSku int64, name string, cou
 	sku := models.Sku(intSku)
 	product, ok := cart[sku]
 	if !ok {
-		cart[sku] = &models.Product{
+		product = &models.Product{
 			Sku:   sku,
 			Name:  name,
 			Count: 0,
 			Price: price,
 		}
+		cart[sku] = product
 	}
 	product.Count += count
 

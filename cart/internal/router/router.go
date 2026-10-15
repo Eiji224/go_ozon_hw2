@@ -48,12 +48,12 @@ func (router *Router) Serve() {
 func (router *Router) getCartContent(w http.ResponseWriter, r *http.Request) {
 	userId, err := strconv.ParseInt(r.PathValue("user_id"), 10, 64)
 	if err != nil || userId <= 0 {
-		http.Error(w, `{"error": "user_id must be digit and greater than 0"}`, http.StatusBadRequest)
+		writeError(w, "user_id must be digit and greater than 0", http.StatusBadRequest)
 		return
 	}
 	cart, err := router.cartRepo.GetCart(userId)
 	if err != nil {
-		http.Error(w, `{"error": "cart not found"}`, http.StatusNotFound)
+		writeError(w, "cart not found", http.StatusNotFound)
 		return
 	}
 	items := cart.GetCartSlice()
@@ -68,46 +68,57 @@ func (router *Router) getCartContent(w http.ResponseWriter, r *http.Request) {
 		TotalPrice: totalPrice,
 	}
 
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
 func (router *Router) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	var product models.Product
 	userId, err := strconv.ParseInt(r.PathValue("user_id"), 10, 64)
-	if err != nil || userId < 0 {
-		http.Error(w, `{"error": "user_id must be digit and greater than 0"}`, http.StatusBadRequest)
+	if err != nil || userId <= 0 {
+		writeError(w, "user_id must be digit and greater than 0", http.StatusBadRequest)
 		return
 	}
 	skuId, err := strconv.ParseInt(r.PathValue("sku_id"), 10, 64)
 	if err != nil || skuId <= 0 {
-		http.Error(w, `{"error": "sku_id must be digit and greater than 0"}`, http.StatusBadRequest)
+		writeError(w, "sku_id must be digit and greater than 0", http.StatusBadRequest)
 		return
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		http.Error(w, `{"error": "count must be digit and greater than 0"}`, http.StatusBadRequest)
+		writeError(w, "count must be digit and greater than 0", http.StatusBadRequest)
 		return
 	}
 
 	name, price, err := router.productClient.GetProduct(context.Background(), skuId)
-	status, errParsed := status.FromError(err)
-	if err != nil && errParsed {
-		switch status.Code() {
-		case codes.InvalidArgument:
-			http.Error(w, `{"error": "`+status.Message()+`"}`, http.StatusBadRequest)
-			return
-		case codes.NotFound:
-			http.Error(w, `{"error": "`+status.Message()+`"}`, http.StatusNotFound)
-			return
-		default:
-			http.Error(w, `{"error": "internal server error"}`, http.StatusInternalServerError)
-			return
+	if err != nil {
+		st, errParsed := status.FromError(err)
+		if errParsed {
+			switch st.Code() {
+			case codes.InvalidArgument:
+				writeError(w, st.Message(), http.StatusBadRequest)
+				return
+			case codes.NotFound:
+				writeError(w, st.Message(), http.StatusPreconditionFailed)
+				return
+			default:
+				writeError(w, "internal server error", http.StatusInternalServerError)
+				return
+			}
 		}
+
+		writeError(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	if err := router.cartRepo.UpdateCart(userId, skuId, name, product.Count, price); err != nil {
-		http.Error(w, `{"error": "internal server error"}`, http.StatusInternalServerError)
+		writeError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func writeError(w http.ResponseWriter, msg string, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }

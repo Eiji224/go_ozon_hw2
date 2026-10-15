@@ -1,5 +1,10 @@
 package models
 
+import (
+	"cmp"
+	"slices"
+)
+
 type Cart map[Sku]*Product
 
 func (c Cart) GetCartSlice() []*Product {
@@ -8,6 +13,10 @@ func (c Cart) GetCartSlice() []*Product {
 	for _, product := range c {
 		result = append(result, product)
 	}
+
+	slices.SortFunc(result, func(a *Product, b *Product) int {
+		return cmp.Compare(a.Sku, b.Sku)
+	})
 
 	return result
 }

@@ -5,8 +5,10 @@ version:
 
 .PHONY: run-all
 run-all:
+	trap 'kill 0' EXIT INT TERM; \
 	(cd product_service && go run ./cmd/product_service/main.go) & \
-	(cd cart && go run ./cmd/api/main.go)
+	(cd cart && go run ./cmd/api/main.go) & \
+	wait 
 
 .PHONY: generate
 generate:
