@@ -18,18 +18,21 @@ type ProductServer struct {
 	productRepo ProductRepo
 }
 
+var ErrInvalidSku = status.Error(codes.InvalidArgument, "sku must be greater than 0")
+var ErrNotFound = status.Error(codes.NotFound, "product not found")
+
 func InitProductServer(productRepo ProductRepo) *ProductServer {
 	return &ProductServer{productRepo: productRepo}
 }
 
 func (s *ProductServer) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.GetProductResponse, error) {
 	if req.Sku <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "sku must be greater than 0")
+		return nil, ErrInvalidSku
 	}
 
 	product, err := s.productRepo.GetProduct(models.Sku(req.Sku))
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "product %d not found", req.Sku)
+		return nil, ErrNotFound
 	}
 
 	response := &pb.GetProductResponse{
