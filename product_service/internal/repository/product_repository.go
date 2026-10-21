@@ -12,8 +12,10 @@ type ProductRepository struct {
 	products map[models.Sku]*models.Product
 }
 
-func InitProductRepository() (*ProductRepository, error) {
-	file, err := os.Open("products.json")
+var ErrNotFound = errors.New("not found")
+
+func InitProductRepository(fileName string) (*ProductRepository, error) {
+	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, errors.New("failed to open products.json")
 	}
@@ -31,7 +33,7 @@ func InitProductRepository() (*ProductRepository, error) {
 func (r *ProductRepository) GetProduct(sku models.Sku) (*models.Product, error) {
 	product, ok := r.products[sku]
 	if !ok {
-		return nil, errors.New("not found")
+		return nil, ErrNotFound
 	}
 
 	return product, nil
