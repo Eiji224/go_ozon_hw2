@@ -13,6 +13,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var ErrUserIdLessThanZero = "user_id must be digit and greater than 0"
+var ErrSkuLessThanZero = "sku_id must be digit and greater than 0"
+var ErrCountDigitGreaterThanZero = "count must be digit and greater than 0"
+var ErrProductNotFound = "product not found"
+var ErrCartNotFound = "cart not found"
+
 type CartRepo interface {
 	GetCart(userId int64) (models.Cart, error)
 	UpdateCart(userId int64, intSku int64, name string, count uint32, price uint32) error
@@ -48,12 +54,12 @@ func (router *Router) Serve() {
 func (router *Router) getCartContent(w http.ResponseWriter, r *http.Request) {
 	userId, err := strconv.ParseInt(r.PathValue("user_id"), 10, 64)
 	if err != nil || userId <= 0 {
-		writeError(w, "user_id must be digit and greater than 0", http.StatusBadRequest)
+		writeError(w, ErrUserIdLessThanZero, http.StatusBadRequest)
 		return
 	}
 	cart, err := router.cartRepo.GetCart(userId)
 	if err != nil {
-		writeError(w, "cart not found", http.StatusNotFound)
+		writeError(w, ErrCartNotFound, http.StatusNotFound)
 		return
 	}
 	items := cart.GetCartSlice()
@@ -76,17 +82,17 @@ func (router *Router) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	var product models.Product
 	userId, err := strconv.ParseInt(r.PathValue("user_id"), 10, 64)
 	if err != nil || userId <= 0 {
-		writeError(w, "user_id must be digit and greater than 0", http.StatusBadRequest)
+		writeError(w, ErrUserIdLessThanZero, http.StatusBadRequest)
 		return
 	}
 	skuId, err := strconv.ParseInt(r.PathValue("sku_id"), 10, 64)
 	if err != nil || skuId <= 0 {
-		writeError(w, "sku_id must be digit and greater than 0", http.StatusBadRequest)
+		writeError(w, ErrSkuLessThanZero, http.StatusBadRequest)
 		return
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		writeError(w, "count must be digit and greater than 0", http.StatusBadRequest)
+		writeError(w, ErrCountDigitGreaterThanZero, http.StatusBadRequest)
 		return
 	}
 
@@ -99,7 +105,7 @@ func (router *Router) addProductToCart(w http.ResponseWriter, r *http.Request) {
 				writeError(w, st.Message(), http.StatusBadRequest)
 				return
 			case codes.NotFound:
-				writeError(w, st.Message(), http.StatusPreconditionFailed)
+				writeError(w, ErrProductNotFound, http.StatusPreconditionFailed)
 				return
 			default:
 				writeError(w, "internal server error", http.StatusInternalServerError)
