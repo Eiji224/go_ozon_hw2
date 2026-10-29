@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/Eiji224/go_ozon/hw2/cart/internal/models"
@@ -8,7 +9,7 @@ import (
 )
 
 func initTestCartRepo(carts map[models.UserId]models.Cart) *CartRepository {
-	return &CartRepository{carts}
+	return &CartRepository{carts, &sync.RWMutex{}}
 }
 
 func TestGetCart(t *testing.T) {
@@ -19,9 +20,9 @@ func TestGetCart(t *testing.T) {
 		userId   int64
 		initCart map[models.UserId]models.Cart
 		wantErr  error
-		wantCart models.Cart
+		wantCart []*models.Product
 	}{
-		{"successful get", 1, map[models.UserId]models.Cart{1: {1: &models.Product{Name: "Book", Price: 100, Count: 1}}}, nil, models.Cart{1: &models.Product{Name: "Book", Price: 100, Count: 1}}},
+		{"successful get", 1, map[models.UserId]models.Cart{1: {1: &models.Product{Name: "Book", Price: 100, Count: 1}}}, nil, []*models.Product{{Name: "Book", Price: 100, Count: 1}}},
 		{"failed get", 1, map[models.UserId]models.Cart{}, ErrNotFound, nil},
 	}
 
@@ -48,10 +49,10 @@ func TestUpdateCart(t *testing.T) {
 		productName  string
 		count        uint32
 		price        uint32
-		expectedCart models.Cart
+		expectedCart []*models.Product
 		expectedErr  error
 	}{
-		{"success update", 1, 1, "Book", 1, 100, models.Cart{1: &models.Product{Sku: 1, Name: "Book", Price: 100, Count: 1}}, nil},
+		{"success update", 1, 1, "Book", 1, 100, []*models.Product{{Sku: 1, Name: "Book", Price: 100, Count: 1}}, nil},
 		{"zero userId", 0, 1, "Book", 1, 100, nil, ErrZeroOrNegativeId},
 		{"negative userId", -1, 1, "Book", 1, 100, nil, ErrZeroOrNegativeId},
 		{"zero sku", 1, 0, "Book", 1, 100, nil, ErrZeroOrNegativeId},
