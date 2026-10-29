@@ -16,7 +16,7 @@ func main() {
 	}
 	defer productClient.Close()
 
-	cartRepo := repository.InitCartRepository()
+	cartRepo := repository.InitCartRepository(productClient)
 
 	router := router.InitRouter(cartRepo, productClient)
 	app := app.InitApp(router)

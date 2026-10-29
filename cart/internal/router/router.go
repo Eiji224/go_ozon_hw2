@@ -20,7 +20,7 @@ var ErrProductNotFound = "product not found"
 var ErrCartNotFound = "cart not found"
 
 type CartRepo interface {
-	GetCart(userId int64) ([]*models.Product, error)
+	GetCart(ctx context.Context, userId int64) ([]*models.Product, error)
 	UpdateCart(userId int64, intSku int64, name string, count uint32, price uint32) error
 }
 
@@ -57,7 +57,7 @@ func (router *Router) getCartContent(w http.ResponseWriter, r *http.Request) {
 		writeError(w, ErrUserIdLessThanZero, http.StatusBadRequest)
 		return
 	}
-	cart, err := router.cartRepo.GetCart(userId)
+	cart, err := router.cartRepo.GetCart(r.Context(), userId)
 	if err != nil {
 		writeError(w, ErrCartNotFound, http.StatusNotFound)
 		return
