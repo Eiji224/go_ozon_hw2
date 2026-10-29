@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"maps"
 	"sync"
 	"time"
 
@@ -36,15 +37,16 @@ func (r *CartRepository) GetCart(ctx context.Context, userId int64) ([]*models.P
 	r.mutex.RLock()
 	id := models.UserId(userId)
 	cart, ok := r.carts[id]
+	cartSnapshot := maps.Clone(cart)
 	r.mutex.RUnlock()
 
 	if !ok {
 		return nil, ErrNotFound
 	}
 
-	result := make([]*models.Product, len(cart))
-	skus := cart.GetSkuSlice()
-	errs := make([]error, len(cart))
+	result := make([]*models.Product, len(cartSnapshot))
+	skus := cartSnapshot.GetSkuSlice()
+	errs := make([]error, len(cartSnapshot))
 
 	wgroup := sync.WaitGroup{}
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*5)
@@ -56,14 +58,14 @@ func (r *CartRepository) GetCart(ctx context.Context, userId int64) ([]*models.P
 			defer wgroup.Done()
 			name, price, err := r.productClient.GetProduct(ctxTimeout, int64(sku))
 			if err != nil {
-				errs[sku] = err
+				errs[i] = err
 				return
 			}
 
 			result[i] = &models.Product{
 				Name:  name,
 				Price: price,
-				Count: cart[sku],
+				Count: cartSnapshot[sku],
 				Sku:   sku,
 			}
 		}()
@@ -97,12 +99,7 @@ func (r *CartRepository) UpdateCart(userId int64, intSku int64, name string, cou
 		r.carts[models.UserId(userId)] = cart
 	}
 
-	sku := models.Sku(intSku)
-	_, found := cart[sku]
-	if !found {
-		cart[sku] = 0
-	}
-	cart[sku]++
+	cart[models.Sku(intSku)] += count
 
 	return nil
 }
