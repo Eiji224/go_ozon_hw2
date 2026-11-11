@@ -20,7 +20,7 @@ func main() {
 	server := grpc.NewServer()
 	reflection.Register(server)
 
-	rep, err := repository.InitProductRepository()
+	rep, err := repository.InitProductRepository("products.json")
 	if err != nil {
 		log.Fatalf("failed to start: %v", err)
 	}
